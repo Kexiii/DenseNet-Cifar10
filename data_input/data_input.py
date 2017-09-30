@@ -20,8 +20,7 @@ def getDataGenerator(train_phase,rescale=1./255):
             flag variable that denotes whether the data augmentation is 
         applied on the train set or validation set
         rescale:
-            rescaling parameter for Keras ImageDataGenerator, if you want to visualize 
-        the images after data augmentation, you should set it to 1.0
+            rescaling parameter for Keras ImageDataGenerator
     Return:
         keras data generator
     """
