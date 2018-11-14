@@ -8,14 +8,14 @@ __all__=['create_dense_net']
 
 from keras.models import Model
 from keras.layers.core import Dense, Dropout, Activation
-from keras.layers.convolutional import Convolution2D
 from keras.layers.pooling import AveragePooling2D
 from keras.layers.pooling import GlobalAveragePooling2D
-from keras.layers import Input
+from keras.layers import Input, Conv2D
 from keras.layers.merge import Concatenate
 from keras.layers.normalization import BatchNormalization
 from keras.regularizers import l2
-import keras.backend as K
+from keras import backend as K
+
 
 def conv_block(input, nb_filter, dropout_rate=None, weight_decay=1E-4):
     ''' Apply BatchNorm, Relu 3x3, Conv2D, optional dropout
@@ -28,8 +28,8 @@ def conv_block(input, nb_filter, dropout_rate=None, weight_decay=1E-4):
     '''
 
     x = Activation('relu')(input)
-    x = Convolution2D(nb_filter, (3, 3), kernel_initializer="he_uniform", padding="same", use_bias=False,
-                      kernel_regularizer=l2(weight_decay))(x)
+    x = Conv2D(nb_filter, (3, 3), kernel_initializer="he_uniform", padding="same", use_bias=False,
+               kernel_regularizer=l2(weight_decay))(x)
     if dropout_rate is not None:
         x = Dropout(dropout_rate)(x)
 
@@ -48,8 +48,8 @@ def transition_block(input, nb_filter, dropout_rate=None, weight_decay=1E-4):
 
     concat_axis = 1 if K.image_dim_ordering() == "th" else -1
 
-    x = Convolution2D(nb_filter, (1, 1), kernel_initializer="he_uniform", padding="same", use_bias=False,
-                      kernel_regularizer=l2(weight_decay))(input)
+    x = Conv2D(nb_filter, (1, 1), kernel_initializer="he_uniform", padding="same", use_bias=False,
+               kernel_regularizer=l2(weight_decay))(input)
     if dropout_rate is not None:
         x = Dropout(dropout_rate)(x)
     x = AveragePooling2D((2, 2), strides=(2, 2))(x)
@@ -86,7 +86,7 @@ def dense_block(x, nb_layers, nb_filter, growth_rate, dropout_rate=None, weight_
 
 
 def createDenseNet(nb_classes, img_dim, depth=40, nb_dense_block=3, growth_rate=12, nb_filter=16, dropout_rate=None,
-                     weight_decay=1E-4, verbose=True):
+                   weight_decay=1E-4, verbose=True):
     ''' Build the create_dense_net model
     Args:
         nb_classes: number of classes
@@ -110,11 +110,11 @@ def createDenseNet(nb_classes, img_dim, depth=40, nb_dense_block=3, growth_rate=
     nb_layers = int((depth - 4) / 3)
 
     # Initial convolution
-    x = Convolution2D(nb_filter, (3, 3), kernel_initializer="he_uniform", padding="same", name="initial_conv2D", use_bias=False,
-                      kernel_regularizer=l2(weight_decay))(model_input)
+    x = Conv2D(nb_filter, (3, 3), kernel_initializer="he_uniform", padding="same", name="initial_conv2D",
+               use_bias=False, kernel_regularizer=l2(weight_decay))(model_input)
 
     x = BatchNormalization(axis=concat_axis, gamma_regularizer=l2(weight_decay),
-                            beta_regularizer=l2(weight_decay))(x)
+                           beta_regularizer=l2(weight_decay))(x)
 
     # Add dense blocks
     for block_idx in range(nb_dense_block - 1):
